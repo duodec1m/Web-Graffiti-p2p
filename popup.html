@@ -1,0 +1,45 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>Draw</title>
+   <link rel="stylesheet" href="assets/css/master.css">
+   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.14.0/css/all.css">
+   <script src="assets/js/jscolor.js"></script>
+  </head>
+  
+  <header>
+	<button id='sign'>Sign In/Out</button>
+	<span id='email'></span>
+  </header>
+
+  <body>
+  	<div class='col'>
+	    <input id="weight" type="range" min="3" max="30" value="4" list="tickmarks">
+		<label>Weight: <span id="weight-value">4</span>px</label>
+		<br>
+		Color: <input id="colorPicker" value="rgba(0,0,0,1)" data-jscolor="">
+		<br>
+		<input id="density" type="range" min="1" max="10" value="10" list="tickmarks">
+		<label>Resolution: <span id="density-value">100</span>%</label>
+		<br>
+		Decrease the resolution to increase fps at the cost of visual quality.
+		<br>
+		<button id='draw' class='menu'>Start Drawing</button>
+		<hr>
+		<form id='form' onsubmit="return false;">
+			<input type="text" id='postTitle' placeholder='Title' autocomplete="off" required>
+			<br>
+			<textarea id='description' placeholder='Description' required></textarea>
+			<br>
+			<button id='submit' class='menu' type='submit'>Submit Drawing</button>
+		</form>
+	</div>
+	
+	<div class='col'>
+		<nav><ul id='site-history'></ul></nav>
+	</div>
+  </body>
+
+  <script src="assets/js/popup.js"></script>
+</html>
