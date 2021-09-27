@@ -1,15 +1,3 @@
-var firebaseConfig = {
-apiKey: "AIzaSyCmuxjSJz7WEvoobwmyFn-yyR2oKO41RiA",
-authDomain: "web-graffiti-4a615.firebaseapp.com",
-databaseURL: "https://web-graffiti-4a615.firebaseio.com",
-projectId: "web-graffiti-4a615",
-storageBucket: "web-graffiti-4a615.appspot.com",
-messagingSenderId: "1024786783703",
-appId: "1:1024786783703:web:2b8b3ef011e75ab6877f92"
-};
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
 // For hashing website urls
 String.prototype.hashCode = function() {
     var hash = 0;
@@ -23,9 +11,7 @@ String.prototype.hashCode = function() {
     }
     return hash;
 }
-
 const site = (location.protocol + '//' + location.host + location.pathname).hashCode();
-var submissions = firebase.database().ref('sites/'+site+'/posts');
 
 var isDrawing = false;
 
@@ -33,36 +19,35 @@ var uColor = 'rgba(0,0,0,1)';
 var weight = 4;
 
 var localLines = new Map();
+var lineIndex = BigInt(0);
 
-var posts = [];
-
-var initDensity;
-var scaler = 1;
+var density = 100;
+var weight = 8;
 
 var isErasing = false;
+
+var peerIndex = 0;
 
 const body = document.body;
 const html = document.documentElement;
 
 function setup() {
 	document.body.style['userSelect'] = 'none';
-  
-	let maxWidth= Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
-	let maxHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+	let maxWidth = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
+    let maxHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
 	let c = createCanvas(maxWidth, maxHeight);
 	c.position(0,0);
 	
 	c.style('pointer-events', 'none');
 	c.style('zIndex', '999999999999');
 	
-	initDensity = pixelDensity();
+	pixelDensity(density/100);
+	strokeWeight(weight);
 }
 
 function draw() {
 	clear();
-	if(isDrawing){
-		ellipse(mouseX,mouseY,5,5);
-	}
+
 	for(let [key, value] of localLines){
 		let L = value;
 		stroke(L.C);
@@ -75,54 +60,42 @@ function draw() {
 		  y:mouseY
 		};		
 	}
-	if(isErasing && isDrawing){
+	if(isErasing){
 		ellipse(mouseX,mouseY,50,50);
+	}else{
+		ellipse(mouseX,mouseY,5,5);
 	}
 
 }
 
 var brush = {
-  x:0,
-  y:0
+	x:0,
+	y:0
 };
 function mouseDragged() {
-	if(isDrawing && !isErasing){
-	  let a = atan2(mouseY - brush.y, mouseX - brush.x);
-	  if(dist(mouseX,mouseY,brush.x,brush.y)>2){
-	    var currentX = brush.x;
-	    var currentY = brush.y;
-	    brush = {
-	     x:brush.x + (cos(a) * abs(mouseX-brush.x) * .5),
-	      y:brush.y + (sin(a) * abs(mouseY-brush.y) * .5)
-	    }
-		let L = {
-			  C:uColor,
-			  W:weight,
-		  	X:brush.x,
-			  Y:brush.y,
-			  pX:currentX,
-			  pY:currentY
-		  }
-		localLines.set(localLines.size, L);
-	  }
+	if(!isErasing){
+		let a = atan2(mouseY - brush.y, mouseX - brush.x);
+		if(dist(mouseX,mouseY,brush.x,brush.y)>2){
+			var currentX = brush.x;
+			var currentY = brush.y;
+			brush = {
+				x:brush.x + (cos(a) * abs(mouseX-brush.x) * .5),
+				y:brush.y + (sin(a) * abs(mouseY-brush.y) * .5)
+			}
+			let L = {
+				C:uColor,
+				W:weight,
+				X:brush.x,
+				Y:brush.y,
+				pX:currentX,
+				pY:currentY
+			}
+			localLines.set(lineIndex, L);
+			lineIndex++;
+		}
 	}
-}
-
-function keyPressed() {
-	if (keyCode === SHIFT) {
-		isErasing = true;
-	}
-	return false; // prevent default
-}
-function keyReleased() {
-	if (keyCode === SHIFT) {
-		isErasing = false;
-	}
-	return false; // prevent any default behavior
-}
-
-function mouseMoved() {
-	if(isErasing && isDrawing){
+	
+	else{
 		for(let [key, value] of localLines){
 			let L = value;
 			try{
@@ -149,91 +122,80 @@ function mouseMoved() {
 	}
 }
 
+const peerCanvas = ( sketch ) => { //template for every new user/connection
+
+	var peerLines = new Map();
+
+	const body = document.body;
+	const html = document.documentElement;
+
+	sketch.setup = () => {
+		document.body.style['userSelect'] = 'none';
+		let maxWidth = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
+		let maxHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+		let c = sketch.createCanvas(maxWidth, maxHeight);
+		c.position(0,0);
+
+		c.style('pointer-events', 'none');
+		c.style('zIndex', (999999999999 + peerIndex).toString());
+	};
+
+	sketch.draw = () => {
+		sketch.clear();
+
+		for(let [key, value] of peerLines){
+			let L = value;
+			sketch.stroke(L.C);
+	  		sketch.strokeWeight(L.W);
+			sketch.line(L.X,L.Y,L.pX,L.pY);
+		}
+	};
+
+	sketch.updateLines = (input) => {
+		peerLines = input;
+	};
+
+	window.addEventListener('scroll', function(e) {
+		let maxWidth = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
+		let maxHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+		if(maxWidth > width || maxHeight > height)
+			sketch.resizeCanvas(maxWidth, maxHeight);
+	}); 
+};
+
 window.addEventListener('scroll', function(e) {
-	let maxWidth= Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
+	let maxWidth = Math.max(body.scrollWidth, body.offsetWidth, html.clientWidth, html.scrollWidth, html.offsetWidth);
     let maxHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
 	if(maxWidth > width || maxHeight > height)
     	resizeCanvas(maxWidth, maxHeight);
 }); 
 
-submissions.on('child_added', function(data){
-	let P = {
-		timestamp:data.key,
-		uid:data.val().uid,
-		upV:data.val().upvotes,
-		drawing:[],
-		title:data.val().title,
-		desc:data.val().desc
-	}
-	data.child('drawing').forEach(element => {
-		P.drawing.push(element.val());
-	});
-	posts.push(P);
-});
-
-submissions.on('child_changed', function(data) {
-	for(const post of posts){
-		if(data.key === post.timestamp){
-			post.upV = data.val().upvotes;
-			break;
-		}
-	}
-});
-
 chrome.runtime.onMessage.addListener(Message);
-
 function Message(req, sender, res) {
-	if(req.weight != null)
-   		weight = req.weight;
-	if(req.color != null)
-		uColor = req.color;
 	if(req.varReq == true){
 		res({
-			color:uColor,
+			uColor:uColor,
 			weight:weight,
-			scaler:scaler,
-			isDrawing:isDrawing,
-			posts:posts
+			isErasing:isErasing,
+			density:density
 		});
-	}
-	if(req.density != null){
-		scaler = req.density;
-		pixelDensity(initDensity * scaler);
-	}
-	if(req.click != null){
-		isDrawing = !isDrawing;
-	}
-	if(req.submit != null){
-		if(localLines.size > 0)
-			submit(req.title,req.desc);
-	}
-	if(req.displayDrawing != null){
-		localLines.clear();
-		for(var line of req.displayDrawing){
-			localLines.set(localLines.size, line);
+	}else{
+		if(req.uColor != null)
+			uColor = req.uColor;
+		if(req.weight != null)
+			weight = req.weight;
+		if(req.isErasing != null)
+			isErasing = req.isErasing;
+		if(req.density != null){
+			density = req.density;
+			pixelDensity(density/100);
 		}
 	}
-	if(req.vote != null){
-		chrome.runtime.sendMessage({
-			type:'vote',
-			child:'sites/'+site+'/posts/'+req.timestamp,
-			vote:req.vote
-		});
-	}
-}
 
-function submit(title,desc){
-	var tempArray = [];
-	for(let [key, value] of localLines){
-		tempArray.push(value);
+	//DEBUG
+	if(req.peerID != null){
+		inputID(req.peerID);
 	}
-	chrome.runtime.sendMessage({
-		type:'post',
-		child:'sites/'+site+'/posts',
-		L:tempArray,
-		title:title,
-		desc:desc
-	});
 }
 
 // Math related functions

@@ -5,10 +5,6 @@
   "description": "A extension  which helps users to draw on webpages.",
   "version": "1.0",
 
-  "background" : {
-	"page": "background.html",
-	"persistent": true
-  },
   "browser_action": {
     "default_icon": "assets/img/icon.png",
 	  "default_popup" : "popup.html"
@@ -18,9 +14,9 @@
     "storage"
 ],
 "content_security_policy": 
-"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://apis.google.com/; object-src 'self'",
+"script-src 'self'; object-src 'self'",
 "content_scripts": [{
    "matches": ["<all_urls>"],
-    "js": ["assets/js/firebase-app.js","assets/js/firebase-database.js","assets/js/p5.min.js", "assets/js/draw.js"]
+    "js": ["assets/js/p5.min.js", "assets/js/draw.js", "assets/js/peerjs.min.js", "assets/js/host.js"]
   }]
 }
