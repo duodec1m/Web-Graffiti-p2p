@@ -2,6 +2,7 @@ const colorPicker = document.getElementById("colorPicker");
 const Dslider = document.getElementById('density');
 const Wslider = document.getElementById('weight');
 const eraseButton = document.getElementById('eraseButton');
+const viewID = document.getElementById('viewID');
 colorPicker.addEventListener("input", function(){sendMessage()});
 Dslider.addEventListener("input", function(){sendMessage()});
 Wslider.addEventListener("input", function(){sendMessage()});
@@ -29,6 +30,13 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		else
 			eraseButton.innerHTML = 'Erase';
 		
+	});
+
+	chrome.tabs.sendMessage(tabs[0].id, {getMyID: true}, function(response) {
+		if (response.myID != null)
+			viewID.innerHTML = response.myID;
+		else
+			viewID.innerHTML = "Close this popup and try again";
 	});
 });
 

@@ -1,7 +1,9 @@
 const peer = new Peer();
 var clients = [];
+var myID;
 
 peer.on('open', function(id) {
+	myID = id;
 	console.log('My peer ID is: ' + id);
 });
 peer.on('connection', function(dataConnection) { 
@@ -45,11 +47,16 @@ function inputID(id){
 	setTimeout(() => { // creating a new peer takes time so wait 4 seconds before attempting to establish a new connection
 		var outgoingConnection = outgoingPeer.connect(id);
 		outgoingConnection.on('open', function() {
-			console.log('outgoing p2p connection successful');
+			alert("Established connection with " + id)
+			console.log('outgoing p2p connection successful with ' + id);
 			establishP2P(outgoingConnection);
 		}); 
 	}, 4000);
 	
+}
+
+function getMyID(){
+	return myID;
 }
 
 //Object to Map converter

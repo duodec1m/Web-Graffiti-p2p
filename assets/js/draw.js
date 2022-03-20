@@ -48,6 +48,13 @@ function setup() {
 function draw() {
 	clear();
 
+	textSize(12);
+	strokeWeight(.1);
+	fill(255, 255, 255, 192);
+	rect(8, 8, 200, 60);
+	fill(0, 0, 0, 256);
+	text("To ensure your experience matches with everyone, please resize your window to 1280x720. It is currently: " + document.documentElement.clientWidth + 'x' + document.documentElement.clientHeight, 10, 10 , 200, 60);
+
 	for(let [key, value] of localLines){
 		let L = value;
 		stroke(L.C);
@@ -195,6 +202,11 @@ function Message(req, sender, res) {
 	//DEBUG
 	if(req.peerID != null){
 		inputID(req.peerID);
+	}
+	if(req.getMyID == true){
+		res({
+			myID:getMyID()
+		});
 	}
 }
 
